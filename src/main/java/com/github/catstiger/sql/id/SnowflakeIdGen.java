@@ -1,8 +1,10 @@
 package com.github.catstiger.sql.id;
 
-import org.springframework.stereotype.Component;
-
-@Component
+/**
+ * 用单机版Snow flake实现IdGen，仅支持一个datacenter和一个worker
+ * @author catstiger
+ *
+ */
 public class SnowflakeIdGen implements IdGen {
  
   private long workerIdBits = 5L;
