@@ -5,6 +5,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * 在MySQL 5.6+中，Clob或者text类型的字段，可以使用全文检索。用@FullText标注的字段，
+ * 在构造查询语句的条件的时候，会使用该数据的全文检索语法。
+ * @author catstiger
+ *
+ */
 @Target(value={ElementType.METHOD, ElementType.FIELD})
 @Retention(value=RetentionPolicy.RUNTIME)
 public @interface FullText {

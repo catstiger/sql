@@ -5,6 +5,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * 用Index标注的类或者属性，在做数据库DDL同步操作的时候，sync框架会自动创建索引。
+ */
 @Target(value={ElementType.FIELD,ElementType.METHOD})
 @Retention(value=RetentionPolicy.RUNTIME)
 public @interface Index {

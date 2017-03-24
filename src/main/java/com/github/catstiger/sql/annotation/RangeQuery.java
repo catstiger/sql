@@ -5,6 +5,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * 用RangeQuery标注的属性或者属性对应的getter方法，在生成查询SQL的时候，会自动构建
+ * 范围检索条件。通常用于数字或者日期的范围检索。
+ * @author catstiger
+ *
+ */
 @Target(value={ElementType.METHOD, ElementType.FIELD})
 @Retention(value=RetentionPolicy.RUNTIME)
 public @interface RangeQuery {
