@@ -1,6 +1,6 @@
 package com.github.catstiger.sql.limit;
 
-public class OracleLimitSql implements LimitSql {
+public class OracleLimitSQL implements LimitSQL {
 
   @Override
   public String getLimitSql(String sql, int start, int limit) {

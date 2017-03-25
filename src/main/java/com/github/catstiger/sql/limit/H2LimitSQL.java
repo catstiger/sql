@@ -1,6 +1,6 @@
 package com.github.catstiger.sql.limit;
 
-public class H2LimitSql implements LimitSql {
+public class H2LimitSQL implements LimitSQL {
 
   @Override
   public String getLimitSql(String sql, int start, int limit) {

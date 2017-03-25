@@ -5,7 +5,7 @@ package com.github.catstiger.sql.limit;
  * @author catstiger
  *
  */
-public interface LimitSql {
+public interface LimitSQL {
   /**
    * 将一个普通的SQL加工成限制抓取范围的SQL
    * @param sql 给定一个SQL 
