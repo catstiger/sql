@@ -1,72 +1,56 @@
 package com.github.catstiger.sql.sync.mysql;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
-import javax.annotation.Resource;
-
-import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.ColumnMapRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Component;
 
 import com.github.catstiger.sql.sync.DatabaseInfo;
 import com.github.catstiger.utils.StringUtils;
 import com.google.common.base.Joiner;
 
-@Component
 public class MySqlDatabaseInfo implements DatabaseInfo {
-  @Resource
-  private JdbcTemplate jdbcTemplate;
-  @Value("${jdbc.url}")
-  private String url;
+  private Logger logger = LoggerFactory.getLogger(getClass());
   
-  private String catalog = null;
+  private JdbcTemplate jdbcTemplate;
+  private String url;
+  private String schema = null;
+  
+  //public static final String CATALOG_NAME = "def";
   private Set<String> tables = new HashSet<String>(100);
   private Set<String> columns = new HashSet<String>(500);
   private Set<String> fks = new HashSet<String>(100);
   private Set<String> indexes = new HashSet<String>(100);
 
-  @Override
-  public String getCatalog() {
-    if(catalog != null) {
-      return catalog;
-    }
-    Connection conn = null;
-    try {
-      conn = jdbcTemplate.getDataSource().getConnection();
-      DatabaseMetaData dbMetaData = conn.getMetaData();
-      ResultSet rs = dbMetaData.getCatalogs();
-      catalog = "def";
-      
-      while (rs.next()) {
-        catalog = rs.getString("TABLE_CAT"); //CATALOG
-        if(url.indexOf(catalog) > 0) {
-          break;
-        }
-      }
-      return catalog;
-      
-    } catch (SQLException e) {
-      e.printStackTrace();
-    } finally {
-      try {
-        conn.close();
-      } catch (SQLException e) {
-        e.printStackTrace();
-      }
-    }
-    return null;
+  public MySqlDatabaseInfo() {
+    
   }
-
+  
+  public MySqlDatabaseInfo(JdbcTemplate jdbcTemplate, String url) {
+    this.jdbcTemplate = jdbcTemplate;
+    this.url = url;
+  }
+  
   @Override
   public String getSchema() {
-    return null;
+    if(schema == null) {
+      List<Map<String, Object>> list = jdbcTemplate.query("select SCHEMA_NAME from information_schema.SCHEMATA "
+          + " where locate(lower(concat('/', SCHEMA_NAME)), lower(?)) > 0", new Object[]{url}, new ColumnMapRowMapper());
+      
+      if(list == null || list.isEmpty() || StringUtils.isBlank(list.get(0).get("SCHEMA_NAME").toString())) {
+        throw new IllegalStateException("Can't get schema from information_schema");
+      }
+      schema = list.get(0).get("SCHEMA_NAME").toString();
+      logger.info("SCHEMA : {}, {}", schema, url);
+    }
+    
+    return schema;
   }
   
   @Override
@@ -77,28 +61,17 @@ public class MySqlDatabaseInfo implements DatabaseInfo {
     if(tables.contains(table.toLowerCase())) {
       return true;
     }
-    Connection conn = null;
-    try {
-      conn = jdbcTemplate.getDataSource().getConnection();
-      DatabaseMetaData dbMetaData = conn.getMetaData();
-      
-      ResultSet rs = dbMetaData.getTables(getCatalog(), getSchema(), table, null);
-      
-      if(rs.next()) {
-        tables.add(table.toLowerCase());
-        return true;
-      }
-    } catch (SQLException e) {
-      e.printStackTrace();
-    } finally {
-      try {
-        conn.close();
-      } catch (SQLException e) {
-        e.printStackTrace();
-      }
+    List<Map<String, Object>> list = jdbcTemplate.query("select table_name from information_schema.tables "
+        + " where table_schema=? and lower(table_name)=?", new Object[]{getSchema(), table.toLowerCase()}, new ColumnMapRowMapper());
+    
+    String tableName = null;
+    if(list != null && !list.isEmpty() && StringUtils.isNotBlank(list.get(0).get("table_name").toString())) {
+      tableName = list.get(0).get("table_name").toString().toLowerCase();
+      tables.add(tableName.toLowerCase());
     }
     
-    return false;
+    
+    return tableName != null;
   }
 
   @Override
@@ -110,96 +83,64 @@ public class MySqlDatabaseInfo implements DatabaseInfo {
     if(columns.contains(tableColumn)) {
       return true;
     }
+    List<Map<String, Object>> list = jdbcTemplate.query("select column_name from information_schema.columns where "
+        + " TABLE_SCHEMA=? and lower(TABLE_NAME)=? and lower(COLUMN_NAME)=?", 
+        new Object[]{getSchema(), table.toLowerCase(), column.toLowerCase()}, new ColumnMapRowMapper());
     
-    Connection conn = null;
-    try {
-      conn = jdbcTemplate.getDataSource().getConnection();
-      DatabaseMetaData dbMetaData = conn.getMetaData();
-            
-      ResultSet rs = dbMetaData.getColumns(getCatalog(), getSchema(), table, column);
-      if(rs.next()) {
-        columns.add(tableColumn);
-        return true;
-      }
-      
-    } catch (SQLException e) {
-      e.printStackTrace();
-    } finally {
-      try {
-        conn.close();
-      } catch (SQLException e) {
-        e.printStackTrace();
-      }
-    }
+    if(list != null && !list.isEmpty() && StringUtils.isNotBlank(list.get(0).get("column_name").toString())) {
+      columns.add((table + "/" + column).toLowerCase());
+      return true;
+    } 
+    
     return false;
   }
 
   @Override
   public Boolean isForeignKeyExists(String table, String column, String refTable, String refColumn) {
-    Connection conn = null;
     String[] args = {"FK", table, column, refTable, refColumn};
     String key = Joiner.on("_").join(args);
     if(fks.contains(key.toLowerCase())) {
       return true;
     }
-    try {
-      conn = jdbcTemplate.getDataSource().getConnection();
-      DatabaseMetaData dbMetaData = conn.getMetaData();
-      ResultSet rs = dbMetaData.getExportedKeys(getCatalog(), getSchema(), refTable);
-      int index = 0;
-      while(rs.next()) {
-        ColumnMapRowMapper cmrm = new ColumnMapRowMapper();
-        Map<String, Object> map = cmrm.mapRow(rs, index);
-        if(getCatalog().equals(map.get("FKTABLE_CAT")) && table.equals(map.get("FKTABLE_NAME")) && column.equals(map.get("FKCOLUMN_NAME"))) {
-          fks.add(key.toLowerCase());
-          return true;
-        }
-        index++;
-      }
-    }  catch (SQLException e) {
-      e.printStackTrace();
-    } finally {
-      try {
-        conn.close();
-      } catch (SQLException e) {
-        e.printStackTrace();
-      }
+    Long c = jdbcTemplate.queryForObject("select count(*) from information_schema.REFERENTIAL_CONSTRAINTS a,"
+        + " information_schema.INNODB_SYS_FOREIGN_COLS b where "
+        + " concat(?,'/',a.CONSTRAINT_NAME)=b.id and lower(b.for_col_name)=? "
+        + " and lower(b.REF_COL_NAME)=? and lower(a.table_name)=? and lower(a.REFERENCED_TABLE_NAME)=?", 
+        new Object[]{getSchema(), column.toLowerCase(), refColumn.toLowerCase(), table.toLowerCase(), refTable.toLowerCase()}, Long.class);
+    
+    if(c != null && c > 0L) {
+      fks.add(key.toLowerCase());
+      return true;
     }
     return false;
   }
 
   @Override
   public Boolean isIndexExists(String tableName, String indexName, boolean unique) {
-    Connection conn = null;
-    String key = (getCatalog() + "_" + indexName).toLowerCase();
+    Objects.requireNonNull(tableName);
+    Objects.requireNonNull(indexName);
+    String key = (tableName + "/" + indexName).toLowerCase();
     if(indexes.contains(key)) {
       return true;
     }
     
-    try {
-      conn = jdbcTemplate.getDataSource().getConnection();
-      DatabaseMetaData dbMetaData = conn.getMetaData();
-      ResultSet rs = dbMetaData.getIndexInfo(getCatalog(), getSchema(), tableName, unique, true);
-      int index = 0;
-      while(rs.next()) {
-        ColumnMapRowMapper cmrm = new ColumnMapRowMapper();
-        Map<String, Object> map = cmrm.mapRow(rs, index);
-        if(indexName.equalsIgnoreCase((String) map.get("INDEX_NAME"))) {
-          indexes.add(key);
-          return true;
-        }
-        index++;
-      }
-    }  catch (SQLException e) {
-      e.printStackTrace();
-    } finally {
-      try {
-        conn.close();
-      } catch (SQLException e) {
-        e.printStackTrace();
-      }
+    Long c = jdbcTemplate.queryForObject("select count(*) from information_schema.INNODB_SYS_TABLES a,information_schema.INNODB_SYS_INDEXES b "
+        + " where b.table_id=a.table_id and lower(b.name)=? and lower(a.name)=concat(?, '/', ?)", 
+        new Object[]{indexName.toLowerCase(), getSchema(), tableName.toLowerCase()}, Long.class) ;
+    
+    if(c != null && c > 0L) {
+      indexes.add(key);
+      return true;
     }
     return false;
+  }
+
+  public void setJdbcTemplate(JdbcTemplate jdbcTemplate) {
+    this.jdbcTemplate = jdbcTemplate;
+  }
+
+  public void setUrl(String url) {
+    this.url = url;
   }
 
 }

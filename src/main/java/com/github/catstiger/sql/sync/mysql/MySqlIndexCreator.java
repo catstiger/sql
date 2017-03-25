@@ -3,14 +3,11 @@ package com.github.catstiger.sql.sync.mysql;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-import javax.annotation.Resource;
 import javax.persistence.JoinColumn;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
 
 import com.github.catstiger.sql.NamingStrategy;
@@ -21,16 +18,17 @@ import com.github.catstiger.sql.sync.IndexCreator;
 import com.github.catstiger.utils.StringUtils;
 import com.google.common.base.Joiner;
 
-@Component
 public class MySqlIndexCreator implements IndexCreator {
   private static Logger logger = LoggerFactory.getLogger(MySqlIndexCreator.class);
-  @Value("${jdbc.strongReferences}")
-  private Boolean strongReferences;
-  @Resource
+
+  private Boolean strongReferences = false;
   private JdbcTemplate jdbcTemplate;
-  @Resource
   private DatabaseInfo databaseInfo;
   private NamingStrategy namingStrategy;
+  
+  public MySqlIndexCreator() {
+    
+  }
 
   @Override
   public void addIndexIfNotExists(Class<?> entityClass, String fieldName) {
@@ -60,7 +58,11 @@ public class MySqlIndexCreator implements IndexCreator {
                 .append("(").append(column.toLowerCase())
                 .append(")").toString();
             logger.info("创建索引 {}, {} on {}", name, table, column);
-            jdbcTemplate.execute(sql);
+            try {
+              jdbcTemplate.execute(sql);
+            } catch (Exception e) {
+              logger.error(e.getMessage());
+            }
           }
           
           return;
@@ -83,7 +85,11 @@ public class MySqlIndexCreator implements IndexCreator {
               .append("(").append(Joiner.on(",").join(columns))
               .append(")").toString();
           logger.info("创建索引 {}, {} on {}", name, table, Joiner.on(",").join(columns));
-          jdbcTemplate.execute(sql);
+          try {
+            jdbcTemplate.execute(sql);
+          } catch (Exception e) {
+            logger.error(e.getMessage());
+          }
         }
       }
     }
@@ -92,6 +98,18 @@ public class MySqlIndexCreator implements IndexCreator {
 
   public void setNamingStrategy(NamingStrategy namingStrategy) {
     this.namingStrategy = namingStrategy;
+  }
+
+  public void setStrongReferences(Boolean strongReferences) {
+    this.strongReferences = strongReferences;
+  }
+
+  public void setJdbcTemplate(JdbcTemplate jdbcTemplate) {
+    this.jdbcTemplate = jdbcTemplate;
+  }
+
+  public void setDatabaseInfo(DatabaseInfo databaseInfo) {
+    this.databaseInfo = databaseInfo;
   }
 
 }

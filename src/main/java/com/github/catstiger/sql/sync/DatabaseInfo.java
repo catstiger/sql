@@ -1,7 +1,6 @@
 package com.github.catstiger.sql.sync;
 
 public interface DatabaseInfo {
-  String getCatalog();
   String getSchema();
   Boolean isTableExists(String table);
   Boolean isColumnExists(String table, String column);

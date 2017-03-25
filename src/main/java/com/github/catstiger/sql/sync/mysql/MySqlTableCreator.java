@@ -4,12 +4,9 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Resource;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Component;
 
 import com.github.catstiger.sql.NamingStrategy;
 import com.github.catstiger.sql.ORMHelper;
@@ -20,19 +17,17 @@ import com.github.catstiger.utils.ReflectUtils;
 import com.github.catstiger.utils.StringUtils;
 import com.google.common.base.Joiner;
 
-@Component
 public class MySqlTableCreator implements TableCreator {
   private Logger logger = LoggerFactory.getLogger(MySqlTableCreator.class);
   
-  @Resource
   private DatabaseInfo databaseInfo;
-  @Resource
   private ColumnCreator columnCreator;
-  @Resource
   private JdbcTemplate jdbcTemplate;
-  
   private NamingStrategy namingStrategy;
   
+  public MySqlTableCreator() {
+    
+  }
   
   @Override
   public void createTableIfNotExists(Class<?> entityClass) {
@@ -60,7 +55,11 @@ public class MySqlTableCreator implements TableCreator {
       sqlBuf.append(Joiner.on(",\n").join(sqls))
       .append(")");
       logger.debug("创建表{}, {}", entityClass.getName(), sqlBuf);
-      jdbcTemplate.execute(sqlBuf.toString());
+      try {
+        jdbcTemplate.execute(sqlBuf.toString());
+      } catch (Exception e) {
+        logger.error(e.getMessage());
+      }
     } 
   }
 
@@ -88,6 +87,18 @@ public class MySqlTableCreator implements TableCreator {
 
   public void setNamingStrategy(NamingStrategy namingStrategy) {
     this.namingStrategy = namingStrategy;
+  }
+
+  public void setDatabaseInfo(DatabaseInfo databaseInfo) {
+    this.databaseInfo = databaseInfo;
+  }
+
+  public void setColumnCreator(ColumnCreator columnCreator) {
+    this.columnCreator = columnCreator;
+  }
+
+  public void setJdbcTemplate(JdbcTemplate jdbcTemplate) {
+    this.jdbcTemplate = jdbcTemplate;
   }
 
 }

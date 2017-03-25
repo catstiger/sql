@@ -1,12 +1,17 @@
 package com.github.catstiger.sql.limit;
 
+/**
+ * 子类将一个普通的SQL加工成一个限制提取（fetch）范围的SQL，子类需要根据不同的数据库实现不同的算法。
+ * @author catstiger
+ *
+ */
 public interface LimitSql {
   /**
-   * 根据原始SQL，创建分页查询SQL
-   * @param sql 原始SQL
-   * @param start 起始位置，第一位为0
-   * @param limit 抓取最多行数
-   * @return Limit Sql
+   * 将一个普通的SQL加工成限制抓取范围的SQL
+   * @param sql 给定一个SQL 
+   * @param start 提取位置，对于MySQL，第一条数据为0
+   * @param limit 抓取数量
+   * @return 被limit子句加工过的SQL
    */
   String getLimitSql(String sql, int start, int limit);
 }

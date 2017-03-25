@@ -6,13 +6,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import javax.annotation.Resource;
 import javax.persistence.JoinColumn;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.github.catstiger.sql.NamingStrategy;
@@ -30,29 +28,28 @@ import com.github.catstiger.utils.ReflectUtils;
 public class MySqlSync implements DbSync, InitializingBean {
   private static Logger logger = LoggerFactory.getLogger(MySqlSync.class);
   
-  @Resource
   private ModelClassLoader modelClassLoader;
-  @Resource
   private DatabaseInfo databaseInfo;
-  @Resource
   private TableCreator tableCreator;
-  @Resource
   private ColumnCreator columnCreator;
-  @Resource
   private IndexCreator indexCreator;
-  @Resource
   private ManyToManyCreator m2mCreator;
-  
   private String[] packagesToScan;
-  
   private NamingStrategy namingStrategy;
+  
+  public MySqlSync() {
+    
+  }
   
   @Override
   public void afterPropertiesSet() throws Exception {
     modelClassLoader.scanPackages(packagesToScan);
   }
   
-  @Value("com.github.catstiger.**.model")
+  /**
+   * 设置Model类所在的包，支持ant格式的匹配，例如com.github.catstiger.**.model
+   * @param packagesToScan
+   */
   public void setPackagesToScan(String[] packagesToScan) {
     this.packagesToScan = packagesToScan;
   }
@@ -171,5 +168,29 @@ public class MySqlSync implements DbSync, InitializingBean {
 
   public void setNamingStrategy(NamingStrategy namingStrategy) {
     this.namingStrategy = namingStrategy;
+  }
+
+  public void setModelClassLoader(ModelClassLoader modelClassLoader) {
+    this.modelClassLoader = modelClassLoader;
+  }
+
+  public void setDatabaseInfo(DatabaseInfo databaseInfo) {
+    this.databaseInfo = databaseInfo;
+  }
+
+  public void setTableCreator(TableCreator tableCreator) {
+    this.tableCreator = tableCreator;
+  }
+
+  public void setColumnCreator(ColumnCreator columnCreator) {
+    this.columnCreator = columnCreator;
+  }
+
+  public void setIndexCreator(IndexCreator indexCreator) {
+    this.indexCreator = indexCreator;
+  }
+
+  public void setM2mCreator(ManyToManyCreator m2mCreator) {
+    this.m2mCreator = m2mCreator;
   }
 }

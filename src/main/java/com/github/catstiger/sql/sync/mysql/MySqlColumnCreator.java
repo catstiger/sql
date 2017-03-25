@@ -6,7 +6,6 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Objects;
 
-import javax.annotation.Resource;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -15,9 +14,7 @@ import javax.persistence.Lob;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Service;
 import org.springframework.util.ReflectionUtils;
 
 import com.github.catstiger.sql.NamingStrategy;
@@ -28,20 +25,13 @@ import com.github.catstiger.sql.sync.DatabaseInfo;
 import com.github.catstiger.sql.sync.IndexCreator;
 import com.github.catstiger.utils.StringUtils;
 
-@Service
 public class MySqlColumnCreator implements ColumnCreator {
   private static Logger logger = LoggerFactory.getLogger(MySqlColumnCreator.class);
-  @Value("${jdbc.strongReferences}")
-  private Boolean strongReferences;
-  @Resource
+  private Boolean strongReferences = false;
   private JdbcTemplate jdbcTemplate;
-  @Resource
   private DatabaseInfo databaseInfo;
-  @Resource
   private IndexCreator indexCreator;
-  
   private NamingStrategy namingStrategy;
-  
   
   @Override
   public void addColumnIfNotExists(Class<?> entityClass, String field) {
@@ -232,5 +222,21 @@ public class MySqlColumnCreator implements ColumnCreator {
 
   public NamingStrategy getNamingStrategy() {
     return namingStrategy;
+  }
+
+  public void setStrongReferences(Boolean strongReferences) {
+    this.strongReferences = strongReferences;
+  }
+
+  public void setJdbcTemplate(JdbcTemplate jdbcTemplate) {
+    this.jdbcTemplate = jdbcTemplate;
+  }
+
+  public void setDatabaseInfo(DatabaseInfo databaseInfo) {
+    this.databaseInfo = databaseInfo;
+  }
+
+  public void setIndexCreator(IndexCreator indexCreator) {
+    this.indexCreator = indexCreator;
   }
 }

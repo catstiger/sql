@@ -16,13 +16,15 @@ import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.core.type.filter.TypeFilter;
-import org.springframework.stereotype.Component;
 import org.springframework.util.ClassUtils;
 
-@Component
 public class ModelClassLoader {
   private static final String RESOURCE_PATTERN = "/**/*.class";
   private static Set<Class<?>> entityClasses = new HashSet<>();
+  
+  public ModelClassLoader() {
+    
+  }
   
   public Iterator<Class<?>> getEntityClasses() {
     return entityClasses.iterator();

@@ -3,14 +3,11 @@ package com.github.catstiger.sql.sync.mysql;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-import javax.annotation.Resource;
 import javax.persistence.ManyToMany;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Component;
 
 import com.github.catstiger.sql.NamingStrategy;
 import com.github.catstiger.sql.ORMHelper;
@@ -19,18 +16,17 @@ import com.github.catstiger.sql.sync.ManyToManyCreator;
 import com.github.catstiger.utils.ReflectUtils;
 import com.github.catstiger.utils.StringUtils;
 
-@Component
 public class MySqlManyToManyCreator implements ManyToManyCreator {
   private static Logger logger = LoggerFactory.getLogger(MySqlManyToManyCreator.class);
-  @Value("${jdbc.strongReferences}")
-  private Boolean strongReferences;
-  @Resource
-  private JdbcTemplate jdbcTemplate;
-  @Resource
-  private DatabaseInfo databaseInfo;
   
+  private Boolean strongReferences = false;
+  private JdbcTemplate jdbcTemplate;
+  private DatabaseInfo databaseInfo;  
   private NamingStrategy namingStrategy;
 
+  public MySqlManyToManyCreator() {
+    
+  }
   
   @Override
   public void createCrossTable(Class<?> entityClass, String fieldName) {
@@ -119,6 +115,21 @@ public class MySqlManyToManyCreator implements ManyToManyCreator {
 
   public void setNamingStrategy(NamingStrategy namingStrategy) {
     this.namingStrategy = namingStrategy;
+  }
+
+
+  public void setStrongReferences(Boolean strongReferences) {
+    this.strongReferences = strongReferences;
+  }
+
+
+  public void setJdbcTemplate(JdbcTemplate jdbcTemplate) {
+    this.jdbcTemplate = jdbcTemplate;
+  }
+
+
+  public void setDatabaseInfo(DatabaseInfo databaseInfo) {
+    this.databaseInfo = databaseInfo;
   }
 
 }
