@@ -6,8 +6,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.github.catstiger.sql.limit.LimitSql;
-import com.github.catstiger.sql.limit.MySqlLimitSql;
+import com.github.catstiger.sql.limit.LimitSQL;
+import com.github.catstiger.sql.limit.MySqlLimitSQL;
 import com.github.catstiger.sql.ns.CamelCaseNamingStrategy;
 import com.github.catstiger.utils.CollectionUtils;
 import com.github.catstiger.utils.StringUtils;
@@ -23,7 +23,7 @@ public final class SQLRequest {
    * 缺省的命名策略--字段名，表名使用下划线命名法，别名使用驼峰命名法
    */
   public static final NamingStrategy DEFAULT_NAME_STRATEGY = new CamelCaseNamingStrategy();
-  public static final LimitSql DEFAULT_LIMIT_SQL = new MySqlLimitSql();
+  public static final LimitSQL DEFAULT_LIMIT_SQL = new MySqlLimitSQL();
   
   Class<?> entityClass;
   BaseEntity entity;
@@ -34,7 +34,7 @@ public final class SQLRequest {
   NamingStrategy namingStrategy = DEFAULT_NAME_STRATEGY;
   boolean includesNull = false;
   boolean byId = false;
-  LimitSql limitSql = DEFAULT_LIMIT_SQL;
+  LimitSQL limitSql = DEFAULT_LIMIT_SQL;
   Map<String, String> sorts = new LinkedHashMap<>(5);
   
   public SQLRequest(Class<?> entityClass) {
@@ -158,7 +158,7 @@ public final class SQLRequest {
   /**
    * 设定本SQLRequest使用的LimitSql对象
    */
-  public SQLRequest withLimitSql(LimitSql limitSql) {
+  public SQLRequest withLimitSql(LimitSQL limitSql) {
     if(limitSql != null) {
       this.limitSql = limitSql;
     }

@@ -31,7 +31,7 @@ import com.github.catstiger.sql.annotation.FullText;
 import com.github.catstiger.sql.annotation.RangeQuery;
 import com.github.catstiger.sql.id.IdGen;
 import com.github.catstiger.sql.id.SnowflakeIDWorker;
-import com.github.catstiger.sql.limit.LimitSql;
+import com.github.catstiger.sql.limit.LimitSQL;
 import com.github.catstiger.utils.Assert;
 import com.github.catstiger.utils.ClassUtils;
 import com.github.catstiger.utils.CollectionUtils;
@@ -502,7 +502,7 @@ public final class SQLFactory {
    * @param limit Max results
    * @return SQL with limit
    */
-  public String limitSql(String sql, int start, int limit, LimitSql limitSql) {
+  public String limitSql(String sql, int start, int limit, LimitSQL limitSql) {
     if(limitSql == null) {
       limitSql = SQLRequest.DEFAULT_LIMIT_SQL;
     }

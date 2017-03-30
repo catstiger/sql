@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 
-import com.github.catstiger.sql.limit.LimitSql;
+import com.github.catstiger.sql.limit.LimitSQL;
 import com.github.catstiger.utils.StringUtils;
 import com.google.common.base.Joiner;
 
@@ -17,7 +17,7 @@ public final class SQLReady {
   //private String sql;
   private List<Object> args = new ArrayList<>(10);
   private Map<String, Object> namedParameters = new HashMap<>(0);
-  private LimitSql limitSql = SQLRequest.DEFAULT_LIMIT_SQL;
+  private LimitSQL limitSql = SQLRequest.DEFAULT_LIMIT_SQL;
   private List<String> appended = new ArrayList<>(10);
   private static final String SQL_SPLITTER = " ";
   private static final String ORDER_BY = " ORDER BY ";
@@ -30,9 +30,11 @@ public final class SQLReady {
    */
   public static final String ASC = "asc";
   
-  
-  
-    
+  /**
+   * 使用SQL和对应的参数，构建一个{@code SQLReady}的实例
+   * @param sql SQL语句
+   * @param args 对应的参数，与SQL语句中的占位符数量相同，顺序一致。
+   */
   public SQLReady(String sql, Object... args) {
     appended.add(sql);
     if(args != null) {
@@ -42,6 +44,11 @@ public final class SQLReady {
     }
   }
   
+  /**
+   * 使用SQL和对应的命名参数，构建一个{@code SQLReady}的实例
+   * @param sql SQL语句
+   * @param namedParameters {@code Map}装载的命名参数，key为名称，value为参数值。key值必须与SQL中的命名占位符一致。
+   */
   public SQLReady(String sql, Map<String, Object> namedParameters) {
     if(sql == null) {
       throw new IllegalArgumentException("SQL must not be null.");
@@ -50,7 +57,12 @@ public final class SQLReady {
     this.namedParameters = namedParameters;
   }
   
-  public SQLReady(String sql, Object[] args, LimitSql limitSql) {
+  /**
+   * 使用SQL和对应的参数以及{@code LimitSql}，构建一个{@code SQLReady}的实例
+   * @param sql SQL语句
+   * @param args 对应的参数，与SQL语句中的占位符数量相同，顺序一致。
+   */
+  public SQLReady(String sql, Object[] args, LimitSQL limitSql) {
     if(sql == null) {
       throw new IllegalArgumentException("SQL must not be null.");
     }
@@ -63,17 +75,29 @@ public final class SQLReady {
     }
     this.limitSql = limitSql;
   }
-  
-  public SQLReady(String sql, Map<String, Object> namedParameters, LimitSql limitSql) {
+  /**
+   * 使用SQL和对应的命名参数以及{@code LimitSql}，构建一个{@code SQLReady}的实例
+   * @param sql SQL语句
+   * @param namedParameters {@code Map}装载的命名参数，key为名称，value为参数值。key值必须与SQL中的命名占位符一致。
+   * @param {@code LimitSQL}的实例
+   */
+  public SQLReady(String sql, Map<String, Object> namedParameters, LimitSQL limitSql) {
     appended.add(sql);
     this.namedParameters = namedParameters;
     this.limitSql = limitSql;
   }
   
+  /**
+   * 返回完整的SQL语句，即本SQLReady实例历次append的结果，按照顺序组合成一个完整的SQL
+   * @return SQL
+   */
   public String getSql() {
     return Joiner.on(SQL_SPLITTER).join(appended);
   }
   
+  /**
+   * 返回所有的SQL参数，返回的顺序与SQL中占位符的顺序相同，数量相同
+   */
   public Object[] getArgs() {
     Object[] objs = new Object[args.size()];
     return args.toArray(objs);
@@ -86,12 +110,20 @@ public final class SQLReady {
       }
     }
   }
-  
+  /**
+   * 新增一个SQL参数，SQL参数的数量必须与SQL语句中占位符的数量一致
+   * @param arg SQL参数
+   * @return this instance.
+   */
   public SQLReady addArg(Object arg) {
     this.args.add(arg);
     return this;
   }
 
+  /**
+   * 返回所有命名参数，命名参数用于带有命名的SQL语句，例如：insert into my_table(id,name)values(:id,:name)
+   * @return 一个装载命名参数的{@code Map}实例，key为名称，value为参数值
+   */
   public Map<String, Object> getNamedParameters() {
     return namedParameters;
   }
@@ -226,7 +258,7 @@ public final class SQLReady {
   }
   
   /**
-   * 新增排序
+   * 新增排序子句，如果原始SQL中有order by子句，则仅追加字段名和排序方向，否则会首先追加{@code #ORDER_BY}
    * @param column 排序字段名
    * @param direction 排序方向
    * @param expression 表达式，为true才执行添加动作
@@ -248,7 +280,7 @@ public final class SQLReady {
     return this;
   }
   /**
-   * 新增排序，方向为ASC
+   * 新增排序，方向为ASC, 如果原始SQL中有order by子句，则仅追加字段名和排序方向，否则会首先追加{@code #ORDER_BY}
    * @param column 字段名
    * @param expression 表达式，决定是否添加排序字段
    * @return
@@ -258,7 +290,7 @@ public final class SQLReady {
   }
   
   /**
-   * 新增排序，
+   * 新增排序子句，如果原始SQL中有order by子句，则仅追加字段名和排序方向，否则会首先追加{@code #ORDER_BY}
    * @param column 字段名
    * @param direction 排序方向
    */
@@ -267,7 +299,7 @@ public final class SQLReady {
   }
   
   /**
-   * 新增排序，
+   * 新增排序，如果原始SQL中有order by子句，则仅追加字段名和排序方向，否则会首先追加{@code #ORDER_BY}
    * @param column 字段名
    * @param direction 排序方向
    */
@@ -275,15 +307,29 @@ public final class SQLReady {
     return orderBy(column, null, true);
   }
   
+  /**
+   * 将原始的SQL转换为一个用于count查询的SQL，会去掉原始SQL中的order， limit等子句，然后在外围包装一个SELECT count(*) FROM..
+   * @return 用于count查询的SQL
+   */
   public String countSql() {
     return SQLFactory.getInstance().countSql(getSql());
   }
-  
+  /**
+   * 将一个普通的SQL转换为限制查询抓取范围的SQL
+   * @param start 抓取结果集的起始记录为准，第一行为0
+   * @param limit 抓取的行数
+   * @return 带有limit功能的SQL
+   */
   public String limitSql(int start, int limit) {
     return SQLFactory.getInstance().limitSql(getSql(), start, limit, limitSql);
   }
 
-  public SQLReady withLimitSql(LimitSql limitSql) {
+  /**
+   * 设定本{@code SQLReady}实例所使用的{@code LimitSql}的实例，根据不同的数据库，{@code LimitSql}会不同。
+   * @param limitSql Instance of {@code LimitSql}
+   * @return this instance.
+   */
+  public SQLReady withLimitSql(LimitSQL limitSql) {
     this.limitSql = limitSql;
     return this;
   }
