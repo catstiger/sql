@@ -14,12 +14,27 @@ import com.google.common.base.Joiner;
  * 用于存放生成的SQL，以及对应的参数
  */
 public final class SQLReady {
-  //private String sql;
+  /**
+   * SQL对应的参数列表
+   */
   private List<Object> args = new ArrayList<>(10);
+  /**
+   * 命名SQL对应的参数列表
+   */
   private Map<String, Object> namedParameters = new HashMap<>(0);
+  /**
+   * {@code LimitSQL}的实现类，用于生成范围抓取代码
+   */
   private LimitSQL limitSql = SQLRequest.DEFAULT_LIMIT_SQL;
+  /**
+   * SQL片段，所有的元素组合成一个完整的SQL
+   */
   private List<String> appended = new ArrayList<>(10);
+  /**
+   * 组合SQL使用的分隔符
+   */
   private static final String SQL_SPLITTER = " ";
+  
   private static final String ORDER_BY = " ORDER BY ";
   /**
    * 排序方向常量
@@ -166,7 +181,7 @@ public final class SQLReady {
    * @param sqlSegment 要追加的SQL
    * @param booleanSupplier Instance of {@link java.util.function.BooleanSupplier}, 可以是一个lambda
    * @param args 涉及的参数
-   * @return
+   * @return  This instance.
    */
   public SQLReady append(String sqlSegment, BooleanSupplier action, Object...args) {
     if(action == null || !action.getAsBoolean()) {
@@ -262,7 +277,7 @@ public final class SQLReady {
    * @param column 排序字段名
    * @param direction 排序方向
    * @param expression 表达式，为true才执行添加动作
-   * @return
+   * @return This instance.
    */
   public SQLReady orderBy(String column, String direction, Boolean expression) {
     if(column == null) {
@@ -283,7 +298,7 @@ public final class SQLReady {
    * 新增排序，方向为ASC, 如果原始SQL中有order by子句，则仅追加字段名和排序方向，否则会首先追加{@code #ORDER_BY}
    * @param column 字段名
    * @param expression 表达式，决定是否添加排序字段
-   * @return
+   * @return  This instance.
    */
   public SQLReady orderBy(String column, Boolean expression) {
     return orderBy(column, null, expression);
