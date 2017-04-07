@@ -11,7 +11,16 @@ import com.github.catstiger.utils.StringUtils;
 import com.google.common.base.Joiner;
 
 /**
- * 用于存放生成的SQL，以及对应的参数
+ * 用于存放生成的SQL，以及对应的参数。SQLReady可以简化“SQL拼接”，使得代码更加清爽简洁。下面是一个场景：
+ * <p>
+ * <pre>
+ * SQLReady sqlReady = new SQLReady("select * from users where 1=1")
+ * .appendIfExists(" and name like ? ", name)
+ * .append(" and degree > ? ", () -> {return degree != null}, degree)
+ * .orderBy("birth", SQLReady.DESC);
+ * jdbcTemplate.query(sqlReady.limitSQL(), sqlRead.getArgs());
+ * </pre>
+ * </p>
  */
 public final class SQLReady {
   /**
@@ -118,6 +127,10 @@ public final class SQLReady {
     return args.toArray(objs);
   }
   
+  /**
+   * 设置查询参数，元素的顺序与SQL中占位符顺序一致。此操作会在原有参数上追加参数。
+   * @param args 查询参数。
+   */
   public void setArgs(Object[] args) {
     if(args != null) {
       for(Object arg : args) {
@@ -143,6 +156,10 @@ public final class SQLReady {
     return namedParameters;
   }
 
+  /**
+   * 设置初始的命名参数，注意，这个操作会抹除原有测命名参数。
+   * @param namedParameters to be set.
+   */
   public void setNamedParameters(Map<String, Object> namedParameters) {
     this.namedParameters = namedParameters;
   }
@@ -213,6 +230,7 @@ public final class SQLReady {
    * @param expression 如果为true,则追加，否则，直接返回
    * @param name 参数名称
    * @param value 参数值
+   * @return This instance.
    */
   public SQLReady append(String sqlSegment, Boolean expression, String name, Object value) {
     return append(sqlSegment, () -> expression, name, value);
@@ -224,6 +242,7 @@ public final class SQLReady {
    * @param action 如果返值为TRUE，则追加，否则返回
    * @param name 参数名称
    * @param value 参数值
+   * @return This instance.
    */
   public SQLReady append(String sqlSegment, BooleanSupplier action, String name, Object value) {
     if(action == null || !action.getAsBoolean()) {
@@ -236,6 +255,7 @@ public final class SQLReady {
    * 追加一段SQL，和命名参数
    * @param sqlSegment SQL片段
    * @param namedParams 命名参数，KEY为参数名称，Value为参数值
+   * @return This instance.
    */
   public SQLReady append(String sqlSegment, Map<String, Object> namedParams) {
     if(sqlSegment == null) {
@@ -248,10 +268,24 @@ public final class SQLReady {
     return this;
   }
   
+  /**
+   * 添加一个SQL片段，和对应的命名参数。
+   * @param sqlSegment SQL片段
+   * @param expression 如果为{@code true},则追加；否则，忽略
+   * @param namedParams 命名参数，key与SQL中对应的名称一致
+   * @return This instance.
+   */
   public SQLReady append(String sqlSegment, Boolean expression, Map<String, Object> namedParams) {
     return this.append(sqlSegment, () -> expression, namedParams);
   }
   
+  /**
+   * 添加一个SQL片段，和对应的命名参数。
+   * @param sqlSegment SQL片段
+   * @param action 如果返回true,则追加；否则，忽略
+   * @param namedParams 命名参数，key与SQL中对应的名称一致
+   * @return This instance.
+   */
   public SQLReady append(String sqlSegment, BooleanSupplier action, Map<String, Object> namedParams) {
     if(action == null || !action.getAsBoolean()) {
       return this;
