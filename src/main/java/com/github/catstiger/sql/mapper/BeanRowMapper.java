@@ -210,7 +210,7 @@ public class BeanRowMapper<T> implements RowMapper<T> {
     return namingStrategy.tablename(beanClass);
   }
   
-  private void extractColumnIndexMap(ResultSet rs) throws SQLException{
+  private void extractColumnIndexMap(ResultSet rs) throws SQLException {
     if(columnIndexMap.isEmpty()) {
       ResultSetMetaData rsMetaData = rs.getMetaData();
      
