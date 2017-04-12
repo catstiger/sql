@@ -3,6 +3,7 @@ package com.github.catstiger.sql.sync.model;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -18,6 +19,8 @@ public class TestRefModel {
   private String title;
   private String descn;
   private String ig;
+  private TestRefCate refCate;
+  
   
   
   @Id @AutoId
@@ -53,6 +56,15 @@ public class TestRefModel {
   
   public void setIg(String ig) {
     this.ig = ig;
+  }
+  
+  @JoinColumn
+  public TestRefCate getRefCate() {
+    return refCate;
+  }
+  
+  public void setRefCate(TestRefCate refCate) {
+    this.refCate = refCate;
   }
   
 }

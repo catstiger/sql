@@ -96,14 +96,13 @@ public final class SQLFactory {
     //SELECT后的字段列表
     for(Iterator<ColField> itr = colFields.iterator(); itr.hasNext();) {
       ColField colField = itr.next();
-      if(colField.isForeign) {
+      if(supportsJoin && colField.isForeign) {
         continue;
       }
       StringBuilder sqlSeg = new StringBuilder(100);
       //属性名作为别名
       if(sqlRequest.usingAlias) {
-        String alias = sqlRequest.namingStrategy.tableAlias(colField.ownerClass);  //字段所在表别名
-        sqlSeg.append(alias).append(".").append(colField.col)
+        sqlSeg.append(colField.alias).append(".").append(colField.col)
         .append(" AS ").append(sqlRequest.namingStrategy.columnLabel(colField.fieldname));
       } else { //不使用别名
         sqlSeg.append(colField.col);
@@ -534,7 +533,7 @@ public final class SQLFactory {
     }
     
     List<ColField> colFields = new ArrayList<ColField>(propertyDescriptors.length);
-    
+    Map<Class<?>, Integer> typeCounts = new HashMap<>(5);
     for(PropertyDescriptor propertyDescriptor : propertyDescriptors) {
       if(propertyDescriptor == null) {
         continue;
@@ -576,15 +575,8 @@ public final class SQLFactory {
       if(isForeign && supportsJoin) {
         ColField colField = new ColField(columnName, field, isPrimary, isForeign, type, sqlRequest.entityClass);
         colField.tablename = sqlRequest.namingStrategy.tablename(colField.type);
-        String alias = sqlRequest.namingStrategy.tableAlias(colField.type);
-        int aliasCount = 0;
-        //检查有无重复的别名
-        for(ColField cf : colFields) {
-          if(cf.alias != null && cf.isForeign && cf.alias.startsWith(alias + "_")) {
-            aliasCount++;
-          }
-        }
-        colField.alias = alias + "_" + aliasCount; //外键的表的别名，要加下标，因为可能重复引用同一个表
+        colField.alias = sqlRequest.namingStrategy.tableAlias(colField.type);
+        
         //外键需要加载对应的entity
         Object fkValue = null;
         if(sqlRequest.entity != null) {
@@ -595,19 +587,35 @@ public final class SQLFactory {
           }
         }
         colFields.add(colField);
+        //涉及的表的计数，防止别名冲突
+        if(typeCounts.containsKey(colField.type)) {
+          typeCounts.put(colField.type, typeCounts.get(colField.type) + 1);
+        } else {
+          typeCounts.put(colField.type, 0);
+        }
+        final int c = typeCounts.get(colField.type);
+        colField.alias = colField.alias + "_" + c;
+        
         //关联表中的数据
+        List<String> exc = new ArrayList<>(sqlRequest.excludes.size() + 1);
+        exc.addAll(sqlRequest.excludes);
+        //exc.add("id"); //不包括外键表里面的主键
         SQLRequest sr = new SQLRequest(type)
             .includes(sqlRequest.includes.toArray(new String[]{}))
-            .excludes(sqlRequest.excludes.toArray(new String[]{}))
+            .excludes(exc.toArray(new String[]{}))
             .usingAlias(sqlRequest.usingAlias)
             .includesNull(sqlRequest.includesNull);
         
         List<ColField> fkFields = getColFields(sr, false);
-        final Object foreignValue = fkValue;
+        final Object foreignValue = fkValue; //临时的，必须final
+        
         fkFields.forEach(e -> {
           e.ownerValue = foreignValue;
+          e.alias = e.alias + "_" + c;
+          if(!e.isForeign) { //仅关联一层，因此，引用表的外键就不考虑了
+            colFields.add(e);
+          }
         });
-        colFields.addAll(fkFields);
 
         //外键关联字段，要保存对应表的主键
         for(ColField fkcf : fkFields) {

@@ -5,9 +5,7 @@ import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.persistence.Entity;
@@ -121,23 +119,15 @@ public class BeanRowMapper<T> implements RowMapper<T> {
       public Object writeProperty(Object owner, PropertyDescriptor propertyDescriptor) {
         String tablename = getTablename(owner.getClass()); //表名
        
-        //所有可能的列名
-        List<String> alias = new ArrayList<String>(3);
         //属性名或者属性名单词用下划线分割
-        alias.add(tablename + "." + namingStrategy.columnLabel(propertyDescriptor));
+        String key = (tablename + "." + namingStrategy.columnLabel(propertyDescriptor));
         //作为外键的列名
         JoinColumn joinColumn = propertyDescriptor.getReadMethod().getAnnotation(JoinColumn.class);
-        //根据列名，找到columnIndex
-        int columnIndex = 0;
-        for(String col : alias) {
-          if(columnIndexMap.containsKey(col.toLowerCase())) {
-            columnIndex = columnIndexMap.get(col.toLowerCase()).index;
-            break;
-          }
-        }
-        
         Object value = null;
-        if(columnIndex != 0) {
+        //根据列名，找到columnIndex
+        if(columnIndexMap.containsKey(key)) {
+          int columnIndex = columnIndexMap.get(key).index;
+          
           if(joinColumn == null) { //写入一般属性
             //调用set方法，写入对应的数据
             value = writeCommonProperty(owner, propertyDescriptor, rs, columnIndex);
@@ -210,7 +200,7 @@ public class BeanRowMapper<T> implements RowMapper<T> {
     return namingStrategy.tablename(beanClass);
   }
   
-  private void extractColumnIndexMap(ResultSet rs) throws SQLException{
+  private void extractColumnIndexMap(ResultSet rs) throws SQLException {
     if(columnIndexMap.isEmpty()) {
       ResultSetMetaData rsMetaData = rs.getMetaData();
      
@@ -240,6 +230,30 @@ public class BeanRowMapper<T> implements RowMapper<T> {
     public ColumnTypesIndex(String column, Integer index, Integer type) {
       this.column = column;
       this.index = index;
+      this.type = type;
+    }
+
+    public String getColumn() {
+      return column;
+    }
+
+    public void setColumn(String column) {
+      this.column = column;
+    }
+
+    public Integer getIndex() {
+      return index;
+    }
+
+    public void setIndex(Integer index) {
+      this.index = index;
+    }
+
+    public Integer getType() {
+      return type;
+    }
+
+    public void setType(Integer type) {
       this.type = type;
     }
 

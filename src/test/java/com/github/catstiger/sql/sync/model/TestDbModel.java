@@ -56,6 +56,8 @@ public class TestDbModel extends BaseEntity {
   private String realName;
   
   private TestRefModel refModel;
+  private TestRefTiger refTiger;
+  private TestRefTiger refTigerSam;
   
   private List<TestManyToManyModel> m2mModel = new ArrayList<>(); 
   
@@ -184,5 +186,22 @@ public class TestDbModel extends BaseEntity {
 
   public void setPcName(String pcName) {
     this.pcName = pcName;
+  }
+  @JoinColumn
+  public TestRefTiger getRefTiger() {
+    return refTiger;
+  }
+
+  public void setRefTiger(TestRefTiger refTiger) {
+    this.refTiger = refTiger;
+  }
+
+  @JoinColumn(name = "ref_tiger_sam_id")
+  public TestRefTiger getRefTigerSam() {
+    return refTigerSam;
+  }
+
+  public void setRefTigerSam(TestRefTiger refTigerSam) {
+    this.refTigerSam = refTigerSam;
   }
 }
