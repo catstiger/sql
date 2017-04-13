@@ -23,9 +23,25 @@ import com.github.catstiger.utils.ReflectUtils;
  * 一个{@link RowMapper}的实现类，可以将ResultSet中的数据装入一个JavaBean。他具有如下feature:
  * <ul>
  *     <li>支持将ResultSet中的数据装入普通JavaBean</li>
- *     <li>在多表join查询的情况下，会将不同的数据装入相应的实体对象中，前提条件是，这些实体对象必须隶属于某一根对象,即构造函数中传入的{@link #beanClass}</li>
- *     <li>在单表查询的情况下，外键会自动装入引用的实体类的id属性中，要求引用的实体类必须用Entity标注，并且必须有可访问的<code>Long getId()</code>方法。例如：<br>
+ *     <li>SELECT后面的字段列表，符合“snake_case”或者“camelCase”, 列名与JavaBean的属性名必须对应，例如：
+ *         <ul>
+ *             <li>select user_id, user_name from sys_users; 对应SysUsers类的userId和userName字段</li>
+ *             <li>select user_id as userId, user_name as userName from sys_users; 对应SysUsers类的userId和userName字段</li>
+ *         </ul>
+ *     </li>
+ *     <li>
+ *        除了上述“snake_case”或者“camelCase”之外，还可以自定义命名策略，需要实现一个NamingStrategy接口，并将实现类的实例
+ *        通过{@link #withNamingStrategy(NamingStrategy)}方法传入。
+ *     </li>
+ *     <li>在多表join查询的情况下，会将不同的数据装入相应的实体对象中，前提条件是：
+ *     <ul>
+ *         <li>所有JOIN后面的表，都在主表中有外键或者等同于外键的字段对应。也就是说，{@code BeanRowMapper}仅支持一层关联。</li>
+ *         <li>主表中，不可以有两个及两个以上的外键关联同一个表。</li>
+ *     </ul>
+ *     </li>
+ *     <li>在单表查询的情况下，外键会自动装入引用的实体类的id属性中，要求引用的实体类必须用Entity标注，并且必须有可访问的<code>Long getId()</code>方法。例如：<p>
  *         SELECT u.dept_id from user u,对应的主实体类为User,外键dept_id对应User的属性dept的id，此时，dept_id会自动装入user.getDept().setId(Long id)中。
+ *         <p>
  *     </li>
  *     <li><b>不</b>支持一对多的情况，也就是说，属性是一个Collection的情况不能装入。</li>
  *     <li><b>不支持</b>重复引用的情况，例如：User中有多个属性指向Dept，则不能正确装入。</li>
@@ -105,8 +121,13 @@ public class BeanRowMapper<T> implements RowMapper<T> {
   
   
   /**
-   * 根据{@link beanClass}和ResultSet中的数据，填充Bean
-   * @see {@link org.springframework.jdbc.core.RowMapper#mapRow(ResultSet, int)}
+   * 映射当前ResultSet所在行的数据，到指定的Java Bean, 映射规则由{@link #namingStrategy}确定。
+   * 例如，如果使用了{@code CamelCaseNamingStrategy}, 则SQL中别名当使用驼峰命名法与Java Bean中的字段名对应。
+   * @param rs the ResultSet to map (pre-initialized for the current row)
+   * @param index the number of the current row
+   * @return the result object for the current row
+   * @throws SQLException if a SQLException is encountered getting
+   * column values (that is, there's no need to catch SQLException)
    */
   @Override
   public T mapRow(final ResultSet rs, int index) throws SQLException {
@@ -206,7 +227,6 @@ public class BeanRowMapper<T> implements RowMapper<T> {
      
       int count = rsMetaData.getColumnCount();
       for(int  index = 1; index <= count; index++) {
-        //int index = i + 1;
         String table = rsMetaData.getTableName(index).toLowerCase();
         //列名(Label)
         String label = table + "." + namingStrategy.columnLabel(rs, index);

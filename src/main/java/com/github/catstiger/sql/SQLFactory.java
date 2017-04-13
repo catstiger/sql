@@ -158,14 +158,14 @@ public final class SQLFactory {
    * 根据Entity中的实体类的实例，创建一个SQL查询的条件: 
    * <ul>
    *    <li>字符串查询都使用 LIKE查询，仅支持右LIKE，即varchar%的形式</li>
-   *    <li>如果属性或者getter方法被@FullMatches标注，则使用MYSQL Locate函数代替 LOCATE(?, c.name) > 0</li>
+   *    <li>如果属性或者getter方法被@FullMatches标注，则使用MYSQL Locate函数代替 LOCATE(?, c.name) &gt; 0</li>
    *    <li>如果属性或者getter方法被@FullText标注，则使用全文检索，对应的字段名为源字段由@FullText标注决定，如果没有设定，则采用本字段</li>
    *    <li>对于数字类型和日期类型，如果被@RangeQuery标注，则采用范围查询，对应的字段名由@RangeQuery设定，如果没有设定，则不采用范围查询</li>
    *    <li>所有查询条件之间的关系，都是AND</li> 
    * </ul>
    * @param sqlRequest 查询请求，必须有一个非空的实体对象
-   * @param fullMatches 字符串查询使用全匹配，即%string%的形式，这种形式不会利用索引！
-   * @return
+   * @param supportsJoin 是否使用JOIN，如果为{@code true},生成的SQL中会将entity中的@JoinColumn字段当做外键处理，并使用JOIN查询。
+   * @return This instance.
    */
   public SQLReady conditions(SQLRequest sqlRequest, boolean supportsJoin) {
     if(sqlRequest.entity == null) {
@@ -326,8 +326,8 @@ public final class SQLFactory {
   /**
    * 生成Insert SQL，忽略为<code>null</code>的字段。
    * 如果给出的SQLRequest对象中，namedParams为<code>true</code>，则返回带有参数的SQL，数据使用MAP封装，否则返回带有?的SQL，数据采用数组封装。
-   * @param entity 实体类
-   * @return
+   * @param sqlRequest 给定SQLRequest对象，包含生成SQL的各种条件
+   * @return SQLReady contains sql and parameters.
    */
   public SQLReady insertNonNull(SQLRequest sqlRequest) {
     sqlRequest = sqlRequest.includesNull(false);
@@ -413,9 +413,8 @@ public final class SQLFactory {
    *     <li>根据SQLRequest中的NamingStrategy，构造各个字段的名字</li>
    *     <li>如果SQLRequest#entity的主键不为空，则自动追加WHERE id=?子句，并且在参数中加入ID值</li>
    * </ul>
-   * @param sqlRequest
-   * @param byId
-   * @return
+   * @param sqlRequest {@link SQLRequest}的实例，包含了生成SQL所需的条件。
+   * @return {@link SQLReady}包含了生成的SQL和对应的参数。
    */
   public SQLReady updateById(SQLRequest sqlRequest) {
     sqlRequest.byId(true);

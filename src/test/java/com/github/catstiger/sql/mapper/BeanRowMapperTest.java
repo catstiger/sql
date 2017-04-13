@@ -9,11 +9,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.util.Assert;
 
 import com.alibaba.fastjson.JSON;
-import com.github.catstiger.sql.BaseTest;
+import com.github.catstiger.sql.BaseTestCase;
 import com.github.catstiger.sql.SQLRequest;
 import com.github.catstiger.sql.sync.model.TestDbModel;
 
-public class BeanRowMapperTest extends BaseTest {
+public class BeanRowMapperTest extends BaseTestCase {
   
   @org.junit.Test
   public void testQ() {

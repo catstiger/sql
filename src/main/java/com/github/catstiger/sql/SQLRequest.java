@@ -196,7 +196,6 @@ public final class SQLRequest {
   
   /**
    * 生成INSERT SQL及其对应的参数
-   * @param includesNull 指出是否包括为<code>null</code>的字段
    * @return Instance of SQLReady.
    */
   public SQLReady insertNonNull() {
@@ -279,13 +278,12 @@ public final class SQLRequest {
    * 根据Entity中的实体类的实例，创建一个SQL查询的条件: 
    * <ul>
    *    <li>字符串查询都使用 LIKE查询，仅支持右LIKE，即varchar%的形式</li>
-   *    <li>如果属性或者getter方法被@FullMatches标注，则使用MYSQL Locate函数代替 LOCATE(?, c.name) > 0</li>
+   *    <li>如果属性或者getter方法被@FullMatches标注，则使用MYSQL Locate函数代替 LOCATE(?, c.name) &gt; 0</li>
    *    <li>如果属性或者getter方法被@FullText标注，则使用全文检索，对应的字段名为源字段由@FullText标注决定，如果没有设定，则采用本字段</li>
    *    <li>对于数字类型和日期类型，如果被@RangeQuery标注，则采用范围查询，对应的字段名由@RangeQuery设定，如果没有设定，则不采用范围查询</li>
    *    <li>所有查询条件之间的关系，都是AND</li> 
    * </ul>
    * @param supportsJoin 是否支持外键关联，如果支持，并且带有@JoinColumn的字段不为空，则创建关联查询。
-   * @see SQLFactory#conditions(SQLRequest)
    * @return
    */
   public SQLReady conditions(boolean supportsJoin) {

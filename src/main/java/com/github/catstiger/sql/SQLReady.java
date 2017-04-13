@@ -12,15 +12,13 @@ import com.google.common.base.Joiner;
 
 /**
  * 用于存放生成的SQL，以及对应的参数。SQLReady可以简化“SQL拼接”，使得代码更加清爽简洁。下面是一个场景：
- * <p>
  * <pre>
  * SQLReady sqlReady = new SQLReady("select * from users where 1=1")
  * .appendIfExists(" and name like ? ", name)
- * .append(" and degree > ? ", () -> {return degree != null}, degree)
+ * .append(" and degree &gt; ? ", () -&gt; {return degree != null}, degree)
  * .orderBy("birth", SQLReady.DESC);
  * jdbcTemplate.query(sqlReady.limitSQL(), sqlRead.getArgs());
  * </pre>
- * </p>
  */
 public final class SQLReady {
   /**
@@ -103,7 +101,7 @@ public final class SQLReady {
    * 使用SQL和对应的命名参数以及{@code LimitSql}，构建一个{@code SQLReady}的实例
    * @param sql SQL语句
    * @param namedParameters {@code Map}装载的命名参数，key为名称，value为参数值。key值必须与SQL中的命名占位符一致。
-   * @param {@code LimitSQL}的实例
+   * @param limitSql {@code LimitSQL}的实例
    */
   public SQLReady(String sql, Map<String, Object> namedParameters, LimitSQL limitSql) {
     appended.add(sql);
@@ -167,7 +165,7 @@ public final class SQLReady {
   /**
    * 追加一段SQL，及其参数
    * @param sqlSegment SQL片段
-   * @param args 参数
+   * @param args 此段SQL所args 涉及的参数
    */
   public SQLReady append(String sqlSegment, Object...args) {
     if(sqlSegment == null) {
@@ -186,7 +184,7 @@ public final class SQLReady {
    * 根据表达式的结果，判断是否追加SQL和参数
    * @param sqlSegment SQL片段
    * @param expression 表达式，可以是一个boolean类型的语句，如果为true, 则追加，否则，直接返回SQLReady对象
-   * @param args SQL对应的参数。
+   * @param args 此段SQL所args 涉及的参数
    * @return
    */
   public SQLReady append(String sqlSegment, Boolean expression, Object...args) {
@@ -196,8 +194,8 @@ public final class SQLReady {
   /**
    * 根据booleanSupplier的返值，决定是否追加一段SQL
    * @param sqlSegment 要追加的SQL
-   * @param booleanSupplier Instance of {@link java.util.function.BooleanSupplier}, 可以是一个lambda
-   * @param args 涉及的参数
+   * @param action Instance of {@link java.util.function.BooleanSupplier}, 可以是一个lambda
+   * @param args 此段SQL所args 涉及的参数
    * @return  This instance.
    */
   public SQLReady append(String sqlSegment, BooleanSupplier action, Object...args) {
@@ -342,6 +340,7 @@ public final class SQLReady {
    * 新增排序子句，如果原始SQL中有order by子句，则仅追加字段名和排序方向，否则会首先追加{@code #ORDER_BY}
    * @param column 字段名
    * @param direction 排序方向
+   * @return This instance.
    */
   public SQLReady orderBy(String column, String direction) {
     return orderBy(column, direction, true);
@@ -350,7 +349,7 @@ public final class SQLReady {
   /**
    * 新增排序，如果原始SQL中有order by子句，则仅追加字段名和排序方向，否则会首先追加{@code #ORDER_BY}
    * @param column 字段名
-   * @param direction 排序方向
+   * @return This instance.
    */
   public SQLReady orderBy(String column) {
     return orderBy(column, null, true);

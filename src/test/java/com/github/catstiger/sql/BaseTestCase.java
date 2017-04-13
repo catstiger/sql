@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import com.alibaba.druid.pool.DruidDataSource;
 
-public class BaseTest {
+public class BaseTestCase {
   protected Logger logger = LoggerFactory.getLogger(getClass());
   public static DruidDataSource ds;
   

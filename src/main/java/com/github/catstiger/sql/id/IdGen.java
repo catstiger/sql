@@ -10,6 +10,7 @@ package com.github.catstiger.sql.id;
 public interface IdGen {
   /**
    * 生成一个全局唯一的ID
+   * @return Id generated.
    */
   public Long nextId();
   
