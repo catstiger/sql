@@ -11,7 +11,6 @@ import javax.persistence.JoinColumn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.stereotype.Service;
 
 import com.github.catstiger.sql.NamingStrategy;
 import com.github.catstiger.sql.ORMHelper;
@@ -24,7 +23,6 @@ import com.github.catstiger.sql.sync.ModelClassLoader;
 import com.github.catstiger.sql.sync.TableCreator;
 import com.github.catstiger.utils.ReflectUtils;
 
-@Service
 public class MySqlSync implements DbSync, InitializingBean {
   private static Logger logger = LoggerFactory.getLogger(MySqlSync.class);
   
