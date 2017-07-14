@@ -21,6 +21,8 @@ public class BaseTestCase {
       ds.setUrl(TestConstants.DB_URL);
       ds.setUsername(TestConstants.DB_USER);
       ds.setPassword(TestConstants.DB_PWD);
+      ds.setInitialSize(100);
+      ds.setMaxActive(200);
       try {
         ds.init();
       } catch (SQLException e) {
